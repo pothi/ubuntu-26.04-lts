@@ -32,15 +32,17 @@ end
 
 function install_base_packages
     set -l pkg_list curl \
-    dnsutils \
-    fail2ban \
-    git \
-    memcached \
-    powermgmt-base \
-    software-properties-common \
-    sudo \
-    unzip \
-    wget
+        dnsutils \
+        fail2ban \
+        git \
+        kitty-terminfo \
+        memcached \
+        mycli \
+        powermgmt-base \
+        software-properties-common \
+        sudo \
+        unzip \
+        wget
 
     echo 'The following packages will be installed (if not installed)'
     echo $pkg_list
