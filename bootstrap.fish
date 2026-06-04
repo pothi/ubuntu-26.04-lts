@@ -2,9 +2,12 @@
 
 # bootstrap a Ubuntu Resolute Raccoon (26.04) server
 
-set ver 1.1
+set ver 1.2
 
 # changelog
+# version: 1.2
+#   - date: 2026-06-04
+#   - add packages for local email
 # version: 1.1
 #   - date: 2026-03-30
 #   - add MySQL
@@ -31,7 +34,8 @@ if not type -q ensure_pkg
 end
 
 function install_base_packages
-    set -l pkg_list curl \
+    set -l pkg_list bsd-mailx \
+        curl \
         dnsutils \
         fail2ban \
         git \
@@ -39,6 +43,7 @@ function install_base_packages
         memcached \
         mycli \
         powermgmt-base \
+        qma \
         software-properties-common \
         sudo \
         unzip \
