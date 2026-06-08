@@ -1,23 +1,16 @@
 #!/usr/bin/env fish
 
+set user_timezone UTC
+
 # bootstrap a Ubuntu Resolute Raccoon (26.04) server
 
 set ver 1.2
-
-# changelog
-# version: 1.2
-#   - date: 2026-06-04
-#   - add packages for local email
-# version: 1.1
-#   - date: 2026-03-30
-#   - add MySQL
-#   - install base packages
 
 # functions {{{
 if not type -q check_status
     function check_status -a return_value error_message
         if test $return_value -ne 0
-            echo $error_message
+            printf '\n%s\n' "$error_message"
             exit $return_value
         end
     end
@@ -28,13 +21,13 @@ if not type -q ensure_pkg
         dpkg-query -W -f='${Status}' $pkg_name 2>/dev/null | grep -q "ok installed"
         if test $status -ne 0
             apt-get -qq install $pkg_name &> /dev/null
-            check_status $status 'Could not install $pkg_name'
+            check_status $status "Error: Could not install $pkg_name"
         end
     end
 end
 
 function install_base_packages
-    set -l pkg_list bsd-mailx \
+    set -l pkg_list awscli \
         curl \
         dnsutils \
         fail2ban \
@@ -43,7 +36,7 @@ function install_base_packages
         memcached \
         mycli \
         powermgmt-base \
-        qma \
+        dma bsd-mailx \
         software-properties-common \
         sudo \
         unzip \
@@ -76,7 +69,7 @@ set php_ver 8.5
 
 # update apt cache if it wasn't updated in the last hour.
 if test -z "$(find /var/cache/apt/pkgcache.bin -mmin -60)"
-    printf '%-72s' 'Refreshing APT cache...'
+    printf '%-66s' 'Refreshing APT cache...'
     apt-get update -qq &>/dev/null
     check_status $status 'Could not refresh apt cache.'
     echo done.
@@ -97,7 +90,7 @@ if test $status -eq 0
 else
     set -l func_path /etc/fish/functions
     if not test -f $func_path/manage-swap.fish
-        printf '%-72s' 'Downloading a function script to manage swap... '
+        printf '%-66s' 'Downloading a function script to manage swap... '
         curl -sSL --output-dir $func_path -O https://github.com/pothi/wp-box/raw/refs/heads/main/func/manage-swap.fish
         check_status $status 'Could not download swap.fish'
         echo done.
@@ -110,11 +103,25 @@ else
 end
 echo
 
-printf '%-72s' "Installing mysql (if not installed)..."
+printf '%-66s' "Installing mysql (if not installed)..."
 ensure_pkg mysql-server
 echo done.
 echo
 
 install_base_packages
+
+# changelog
+# 1.3
+#   - date: 2026-06-08
+#   - add awscli
+#   - fix package name
+#   - improve formatting
+# version: 1.2
+#   - date: 2026-06-04
+#   - add packages for local email
+# version: 1.1
+#   - date: 2026-03-30
+#   - add MySQL
+#   - install base packages
 
 # vim:foldmethod=marker
