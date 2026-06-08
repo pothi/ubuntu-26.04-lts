@@ -1,12 +1,18 @@
 #!/usr/bin/env fish
 
-# Multipass manager
-# Requirements: a server with the name rr
+# requirements
+# multipass LTS server named - rr
+set lts rr
 
-set ver 1.0
+set ver 1.1
+
+#TODO: Display the time to execute the functions.
 
 # changelog
-# version: 1.0
+# 1.1
+#   - date: 2026-06-07
+#   - better flow of commands.
+# 1.0
 #   - date: 2026-03-30
 #   - create a test server automatically
 #   - add a log file
@@ -16,8 +22,6 @@ set -x DEBIAN_FRONTEND noninteractive
 set time_start
 set time_end
 set run_time
-
-test -d ~/log; or mkdir -p ~/log
 
 function manage-multipass --description 'Manage multipass servers'
     argparse 'c/create' 'd/delete' 'u/update' -- $argv
@@ -31,7 +35,7 @@ function manage-multipass --description 'Manage multipass servers'
     if set -ql _flag_create
         __bootstrap
         __delete_test
-        __update_rr
+        __update_lts
         __create_test
         __cleanup
         return 0
@@ -46,7 +50,7 @@ function manage-multipass --description 'Manage multipass servers'
 
     if set -q _flag_update
         __bootstrap
-        __update_rr
+        __update_lts
         __cleanup
         return 0
     end
@@ -74,7 +78,7 @@ function __create_test
 
     multipass list | grep -qw '^test'
     if test $status -ne 0
-        multipass clone -n test rr
+        multipass clone -n test $lts
         echo A test server is created from Resolute Raccoon.
         multipass start test
         echo Test server has been started.
@@ -87,38 +91,39 @@ function __create_test
 end
 
 function __delete_test
+    multipass set client.primary-name=$lts
+    echo Resolute Raccoon is made as primary server.
+
     multipass list | grep -qw '^test'
     if test $status -eq 0
         echo Hold on while deleting the test server...
         multipass delete test
         echo Test server is deleted.
+
+        multipass purge
+        echo Purged unused resources.
     else
         echo Test server does not exist.
     end
-
-    multipass purge
-    echo Purged unused resources.
-    multipass set client.primary-name=rr
-    echo Resolute Raccoon is made as primary server.
 
     echo Current servers list...
     multipass list
     echo
 end
 
-function __update_rr
-    multipass set client.primary-name=rr
+function __update_lts
+    multipass set client.primary-name=$lts
     echo Set Resolute Raccoon as primary server.
-    echo Starting the server...
+    echo Starting the (primary) server...
     multipass start
     echo Refreshing apt cache...
-    multipass exec rr -- sudo apt-get update -qq
+    multipass exec $lts -- sudo apt-get update -qq
     echo 'Updating packages (if any)...'
-    multipass exec rr -- sudo apt-get upgrade -y -qq
+    multipass exec $lts -- sudo apt-get upgrade -y -qq
     echo 'Removing packages (if any)...'
-    multipass exec rr -- sudo apt-get autoremove -y -qq
+    multipass exec $lts -- sudo apt-get autoremove -y -qq
     multipass stop
-    echo Stoppeg Resolute Raccoon server.
+    echo Stopped Resolute Raccoon server.
     echo
 end
 
