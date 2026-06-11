@@ -4,11 +4,14 @@
 # multipass LTS server named - rr
 set lts rr
 
-set ver 1.1
+set ver 1.2
 
 #TODO: Display the time to execute the functions.
 
 # changelog
+# 1.2
+#   - date: 2026-06-08
+#   - fix formatting.
 # 1.1
 #   - date: 2026-06-07
 #   - better flow of commands.
@@ -114,7 +117,7 @@ end
 function __update_lts
     multipass set client.primary-name=$lts
     echo Set Resolute Raccoon as primary server.
-    echo Starting the (primary) server...
+    echo 'Starting the (primary) server...'
     multipass start
     echo Refreshing apt cache...
     multipass exec $lts -- sudo apt-get update -qq
