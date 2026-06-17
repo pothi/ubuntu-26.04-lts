@@ -41,6 +41,7 @@ function manage-multipass --description 'Manage multipass servers'
         __update_lts
         __create_test
         __cleanup
+        osascript -e 'display notification "Bootstrap completed!" with title "Multipass manager"' 2>/dev/null
         return 0
     end
 
