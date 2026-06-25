@@ -1,7 +1,10 @@
 #!/usr/bin/fish
 
+set -l ver 1.0
+
 set REDIS_CONF "/etc/redis/redis.conf"
 set INCLUDE_LINE "include /etc/redis/conf.d/*.conf"
+set redis_sysctl_file '/etc/sysctl.d/local-redis.conf'
 
 # Verify root privileges
 if not fish_is_root_user
@@ -35,7 +38,7 @@ else
     else
         # File ends in text or a single newline; prepend a blank line for padding
         set APPEND_BLOCK "\n$INCLUDE_LINE"
-    end # <-- Fixed from '}' to 'end'
+    end
 
     # Append the block cleanly using printf to safely parse the explicit \n
     if printf "%b\n" "$APPEND_BLOCK" >> $REDIS_CONF
@@ -46,3 +49,16 @@ else
         exit 1
     end
 end
+
+# To fix a warning in /var/log/redis/redis-server.log file
+# WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+# Also see: https://redis.io/docs/latest/operate/oss_and_stack/management/admin/
+printf "vm.overcommit_memory = 1\n" > $redis_sysctl_file
+# Load settings from the redis sysctl file
+sysctl --quiet --load $redis_sysctl_file
+
+# TODO: Configure memory and memory policy
+# TODO: https://redis.io/tutorials/operate/redis-at-scale/talking-to-redis/#set-tcp-backlog
+# TODO: Disable THB as mentioned at https://redis.io/docs/latest/operate/oss_and_stack/management/admin/#linux
+# ref: https://github.com/pothi/wp-in-a-box/blob/main/scripts/redis.sh
+# also see: https://github.com/pothi/wp-in-a-box/issues/51#issuecomment-343657080
