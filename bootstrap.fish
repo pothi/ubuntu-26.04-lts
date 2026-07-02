@@ -28,6 +28,7 @@ end
 
 function install_base_packages
     set -l pkg_list awscli \
+        cron \
         curl \
         dnsutils \
         fail2ban \
@@ -35,11 +36,13 @@ function install_base_packages
         kitty-terminfo \
         memcached \
         mycli \
+        net-tools \
         powermgmt-base \
         dma bsd-mailx \
         software-properties-common \
         sudo \
         unzip \
+        vim \
         wget
 
     echo 'The following packages will be installed (if not installed)'
@@ -109,6 +112,9 @@ echo done.
 echo
 
 install_base_packages
+
+# TODO: Install nginx
+# TOOD: Install php-fpm
 
 # changelog
 # 1.3
