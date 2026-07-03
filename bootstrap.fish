@@ -4,7 +4,7 @@ set user_timezone UTC
 
 # bootstrap a Ubuntu Resolute Raccoon (26.04) server
 
-set ver 1.2
+set ver 1.4
 
 # functions {{{
 if not type -q check_status
@@ -16,19 +16,16 @@ if not type -q check_status
     end
 end
 
-if not type -q ensure_pkg
-    function ensure_pkg -a pkg_name
-        dpkg-query -W -f='${Status}' $pkg_name 2>/dev/null | grep -q "ok installed"
-        if test $status -ne 0
-            apt-get -qq install $pkg_name &> /dev/null
-            check_status $status "Error: Could not install $pkg_name"
-        end
+function iAPT -a package
+    if not dpkg-query -W -f='${Status}' $package 2>/dev/null | grep -q "ok installed"
+        printf '%-66s' "Installing '$package' ..."
+        DEBIAN_FRONTEND=noninteractive apt-get -qq install $package > /dev/null 2> /dev/null
+        echo done.
     end
 end
 
 function install_base_packages
     set -l pkg_list awscli \
-        cron \
         curl \
         dnsutils \
         fail2ban \
@@ -36,24 +33,41 @@ function install_base_packages
         kitty-terminfo \
         memcached \
         mycli \
-        net-tools \
         powermgmt-base \
         dma bsd-mailx \
         software-properties-common \
         sudo \
         unzip \
-        vim \
         wget
 
-    echo 'The following packages will be installed (if not installed)'
-    echo $pkg_list
-
-    echo Installed packages...
-    for pkg_name in $pkg_list
-        ensure_pkg $pkg_name
-        printf '%s ' $pkg_name
+    # Conditionally add packages only on minimized Ubuntu images
+    if test -f /usr/bin/unminimize
+        set -a pkg_list cron net-tools vim
     end
-    echo;echo
+    # echo Base packages List... $pkg_list
+
+    # === Filter out already installed packages ===
+    set -l to_install
+    for pkg_name in $pkg_list
+        # if not dpkg-query -W -f='${Status}' $pkg_name 2>/dev/null | string match -q "install ok installed"
+        if not dpkg-query -W -f='${Status}' $pkg_name 2>/dev/null | grep -q "ok installed"
+            set -a to_install $pkg_name
+        end
+    end
+
+    set -l pkg_list $to_install
+
+    if test -n "$pkg_list"
+        echo Base packages List... $pkg_list
+
+        printf '%s' "Installed packages... "
+        for pkg_name in $pkg_list
+            DEBIAN_FRONTEND=noninteractive apt-get -qq install $pkg_name > /dev/null 2> /dev/null
+            check_status $status "Error: Could not install $pkg_name"
+            printf '%s ' $pkg_name
+        end
+        echo;echo
+    end
 end
 # }}}
 
@@ -106,17 +120,25 @@ else
 end
 echo
 
-printf '%-66s' "Installing mysql (if not installed)..."
-ensure_pkg mysql-server
-echo done.
-echo
-
 install_base_packages
 
-# TODO: Install nginx
+iAPT mysql-server
+iAPT nginx
+
+# TODO: Configure nginx (from pothi/wordpress-nginx)
 # TOOD: Install php-fpm
 
+# Configure VIM
+curl -s https://codeberg.org/pothi/vim/raw/branch/main/vimrc-manager.fish | fish
+
 # changelog
+# 1.4
+#   - date: 2026-07-03
+#   - add cron, net-tools and vim on minimal server package
+#   - install mysql-server and nginx
+#   - configure VIM
+#   - improve and use iAPT function
+#   - better output
 # 1.3
 #   - date: 2026-06-08
 #   - add awscli
