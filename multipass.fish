@@ -4,9 +4,13 @@
 # multipass LTS server named - rr
 set lts rr
 
-set ver 1.3
+set ver 1.4
 
-# changelog
+# {{{ changelog
+# 1.4
+#   - date: 2026-07-03
+#   - rename create to clone
+#   - clone process doesn't include updating $lts server
 # 1.3
 #   - date: 2026-06-27
 #   - double upgrade pass for fresh clones
@@ -23,23 +27,23 @@ set ver 1.3
 #   - date: 2026-03-30
 #   - create a test server automatically
 #   - add a log file
+# }}}
 
 set --local PATH ~/.local/bin ~/bin /usr/local/bin /usr/bin /sbin /bin
 set time_start
 
 function manage-multipass --description 'Manage multipass servers'
-    argparse 'c/create' 'd/delete' 'u/update=' -- $argv
+    argparse 'c/clone' 'd/delete' 'u/update=' -- $argv
     or return
 
     if test (count $argv_opts) -eq 0
-        echo "Usage: manage-multipass.fish -c/--create -d/--delete -u/--update="
+        echo "Usage: manage-multipass.fish -c/--clone -d/--delete -u/--update="
         return 0
     end
 
-    if set -ql _flag_create
+    if set -ql _flag_clone
         __bootstrap
         __delete_test
-        __update_server $lts
         __create_test
         __cleanup
         osascript -e 'display notification "Bootstrap completed!" with title "Multipass manager"' 2>/dev/null
@@ -98,21 +102,21 @@ end
 
 function __delete_test
     multipass set client.primary-name=$lts
-    echo "Resolute Raccoon is made as primary server."
+    echo Resolute Raccoon is made as primary server.
 
     multipass list | grep -qw '^test'
     if test $status -eq 0
-        echo "Hold on while deleting the test server..."
+        echo Hold on while deleting the test server...
         multipass delete test
-        echo "Test server is deleted."
+        echo Test server is deleted.
 
         multipass purge
-        echo "Purged unused resources."
+        echo Purged unused resources.
     else
-        echo "Test server does not exist."
+        echo Test server does not exist.
     end
 
-    echo "Current servers list..."
+    echo Current servers list...
     multipass list
     echo
 end
@@ -160,3 +164,5 @@ function __update_server --description "Updates server packages"
 end
 
 manage-multipass $argv 2>&1 | tee -a ~/log/multipass.log
+
+# vim:foldmethod=marker
