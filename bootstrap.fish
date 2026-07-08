@@ -69,6 +69,48 @@ function install_base_packages
         echo;echo
     end
 end
+
+function install_php_fpm_package
+    set -l VER
+    if test (count $argv) -eq 1
+        set VER $argv[1]
+    else
+        set VER $php_ver
+    end
+    # echo "PHP VERSION: $VER"
+
+    set -l pkg_list \
+        php$VER-common \
+        php$VER-mysql \
+        php$VER-gd \
+        php$VER-cli \
+        php$VER-xml \
+        php$VER-mbstring \
+        php$VER-soap \
+        php$VER-curl \
+        php$VER-zip \
+        php$VER-bcmath \
+        php$VER-intl \
+        php$VER-imagick \
+        php$VER-fpm
+
+    # keep a single whitespace while removing others
+    # set pkg_list (string replace -ra '\s+' ' ' $pkg_list)
+    # echo PHP-FPM packages List... $pkg_list
+    # exit
+
+    if not dpkg-query -W -f='${Status}' php$VER-fpm 2>/dev/null | grep -q "ok installed"
+        echo Installing php-fpm... it may take an average of 30 seconds...
+        set -l start_time (date +%s)
+        DEBIAN_FRONTEND=noninteractive apt-get -qq install $pkg_list >/dev/null
+        echo "(php-fpm) Installation Time: $(math $(date +%s) - $start_time) seconds."
+        echo;echo
+        # else
+        # echo PHP-FPM is already installed.
+        # apt-get -qq remove $pkg_list
+    end
+
+end
 # }}}
 
 fish_is_root_user; or check_status 1 'This script requires root privilege.'
@@ -124,14 +166,41 @@ install_base_packages
 
 iAPT mysql-server
 iAPT nginx
+# install certbot (if nginx is found)
+
+install_php_fpm_package $php_ver
+
+set -l ENVSOURCE /etc/fish/functions/envsource.fish
+if not test -f $ENVSOURCE
+    curl -sSL https://github.com/pothi/snippets/raw/refs/heads/main/fish/functions/envsource.fish > $ENVSOURCE
+    source $ENVSOURCE
+end
+
+if test -f ~/.env
+    if type -q envsource
+        envsource ~/.env
+    else
+        echo "'envsource' function doesn't exist."
+    end
+    # echo CERTBOT Account Email: $CERTBOT_ACCOUNT_EMAIL
+    # echo Alert Email: $ALERT_EMAIL
+end
 
 # TODO: Configure nginx (from pothi/wordpress-nginx)
-# TOOD: Install php-fpm
+# TODO: Configure php-fpm
+# TODO: Install certbot if nginx is present
 
 # Configure VIM
-curl -s https://codeberg.org/pothi/vim/raw/branch/main/vimrc-manager.fish | fish
+if not test -f ~/.config/vim/vimrc
+    curl -s https://codeberg.org/pothi/vim/raw/branch/main/vimrc-manager.fish | fish
+end
 
 # changelog
+# 1.5
+#   - date: 2026-07-08
+#   - install php-fpm packages
+#   - configure vim only once
+#   - configure envsource function
 # 1.4
 #   - date: 2026-07-03
 #   - add cron, net-tools and vim on minimal server package
@@ -151,5 +220,3 @@ curl -s https://codeberg.org/pothi/vim/raw/branch/main/vimrc-manager.fish | fish
 #   - date: 2026-03-30
 #   - add MySQL
 #   - install base packages
-
-# vim:foldmethod=marker
