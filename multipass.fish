@@ -83,9 +83,6 @@ function __cleanup
 end
 
 function __create_test
-    echo "Current servers list..."
-    multipass list
-
     multipass list | grep -qw '^test'
     if test $status -ne 0
         multipass clone -n test $lts
@@ -95,8 +92,11 @@ function __create_test
         multipass set client.primary-name=test
         echo "Test server is made as primary."
     else
-        echo "The test server does not exist." >&2
+        echo "The test server already exists." >&2
     end
+
+    echo "Current servers list..."
+    multipass list
     echo
 end
 
