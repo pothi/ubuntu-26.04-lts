@@ -1,16 +1,21 @@
 #!/usr/bin/env fish
 
 # requirements
-# multipass LTS server named - rr
-set lts rr
+# multipass LTS server named - rr (Resolute Raccoon)
+set lts_abbr rr
+set lts_name 'Resolute Raccoon'
 
-set ver 1.4
+set ver 1.5
 
 # {{{ changelog
+# 1.5
+#   - date: 2026-07-17
+#   - stop LTS server (if running)
+#   - improve variable names and output info
 # 1.4
 #   - date: 2026-07-03
 #   - rename create to clone
-#   - clone process doesn't include updating $lts server
+#   - clone process doesn't include updating $lts_abbr server
 # 1.3
 #   - date: 2026-06-27
 #   - double upgrade pass for fresh clones
@@ -85,10 +90,13 @@ end
 function __create_test
     multipass list | grep -qw '^test'
     if test $status -ne 0
-        multipass clone -n test $lts
-        echo "A test server is created from Resolute Raccoon."
+        multipass stop $lts_abbr
+        echo "$lts_name is stopped (if running)"
+
+        multipass clone -n test $lts_abbr
+        echo A test server is cloned from $lts_name
         multipass start test
-        echo "Test server has been started."
+        echo "Test server is started."
         multipass set client.primary-name=test
         echo "Test server is made as primary."
     else
@@ -101,8 +109,8 @@ function __create_test
 end
 
 function __delete_test
-    multipass set client.primary-name=$lts
-    echo Resolute Raccoon is made as primary server.
+    multipass set client.primary-name=$lts_abbr
+    echo $lts_name is made as primary server.
 
     multipass list | grep -qw '^test'
     if test $status -eq 0
@@ -127,39 +135,44 @@ function __update_server --description "Updates server packages"
         return 1
     end
 
-    set --local _server $argv[1]
-    if test -z $_server
-        set _server rr
+    set --local _server_abbr $argv[1]
+    set --local _server_name
+    if test -z $_server_abbr
+        set _server_abbr rr
     end
 
-    if test $_server = '='
-        set _server rr
+    if test $_server_abbr = '='
+        set _server_abbr rr
     end
 
-    multipass list | grep -qw "^$_server"
+    if test $_server_abbr = "rr"
+        set _server_name 'Resolute Raccoon'
+    end
+
+    multipass list | grep -qw "^$_server_abbr"
     if test $status -ne 0
-        echo "The supplied server '$_server' is not found. So, it can not be updated." >&2
+        echo "The supplied server '$_server_abbr' is not found. So, it can not be updated." >&2
         exit
     end
 
-    echo 'Starting the server Resolute Raccoon ...'
-    multipass start $_server
+    echo "Starting the server $_server_name"
+    multipass start $_server_abbr
 
     printf '\t%s\n' "Refreshing apt cache..."
-    multipass exec $_server -- sudo apt-get update -qq
+    multipass exec $_server_abbr -- sudo apt-get update -qq
 
     printf '\t%s\n' 'Updating packages (if any)...'
-    multipass exec $_server -- sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -qq
+    multipass exec $_server_abbr -- sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -qq
 
     # Second pass catches packages that only become available after first update
     printf '\t%s\n' 'Running second upgrade pass (important for fresh clones)...'
-    multipass exec $_server -- sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -qq
+    multipass exec $_server_abbr -- sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -qq
 
     printf '\t%s\n' 'Removing unnecessary packages...'
-    multipass exec $_server -- sudo DEBIAN_FRONTEND=noninteractive apt-get autoremove -y -qq
+    multipass exec $_server_abbr -- sudo DEBIAN_FRONTEND=noninteractive apt-get autoremove -y -qq
 
-    multipass stop $_server
-    echo "Stopped the server Resolute Raccoon"
+    multipass stop $_server_abbr
+    echo "Stopped the server $_server_name"
     echo
 end
 
