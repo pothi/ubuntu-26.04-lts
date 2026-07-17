@@ -5,12 +5,13 @@
 set lts_abbr rr
 set lts_name 'Resolute Raccoon'
 
-set ver 1.5
+set ver 1.6
 
 # {{{ changelog
 # 1.5
 #   - date: 2026-07-17
 #   - stop LTS server (if running)
+#   - fix double-upgrade issue
 #   - improve variable names and output info
 # 1.4
 #   - date: 2026-07-03
@@ -161,15 +162,11 @@ function __update_server --description "Updates server packages"
     printf '\t%s\n' "Refreshing apt cache..."
     multipass exec $_server_abbr -- sudo apt-get update -qq
 
-    printf '\t%s\n' 'Updating packages (if any)...'
-    multipass exec $_server_abbr -- sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -qq
-
-    # Second pass catches packages that only become available after first update
-    printf '\t%s\n' 'Running second upgrade pass (important for fresh clones)...'
-    multipass exec $_server_abbr -- sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -qq
+    printf '\t%s\n' 'Applying upgrades (including phased and kernel packages)...'
+    multipass exec $_server_abbr -- sudo DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y -qq >/dev/null
 
     printf '\t%s\n' 'Removing unnecessary packages...'
-    multipass exec $_server_abbr -- sudo DEBIAN_FRONTEND=noninteractive apt-get autoremove -y -qq
+    multipass exec $_server_abbr -- sudo DEBIAN_FRONTEND=noninteractive apt-get autoremove -y -qq >/dev/null
 
     multipass stop $_server_abbr
     echo "Stopped the server $_server_name"
