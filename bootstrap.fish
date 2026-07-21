@@ -170,17 +170,17 @@ iAPT nginx
 
 install_php_fpm_package $php_ver
 
-set -l ENVSOURCE /etc/fish/functions/envsource.fish
-if not test -f $ENVSOURCE
-    curl -sSL https://github.com/pothi/snippets/raw/refs/heads/main/fish/functions/envsource.fish > $ENVSOURCE
-    source $ENVSOURCE
+set -l LOAD_ENV /etc/fish/functions/load_env.fish
+if not test -f $LOAD_ENV
+    curl -sSL https://github.com/pothi/snippets/raw/refs/heads/main/fish/functions/load_env.fish > $LOAD_ENV
+    source $LOAD_ENV
 end
 
 if test -f ~/.env
-    if type -q envsource
-        envsource ~/.env
+    if type -q load_env
+        load_env ~/.env
     else
-        echo "'envsource' function doesn't exist."
+        echo "'load_env' function doesn't exist."
     end
     # echo CERTBOT Account Email: $CERTBOT_ACCOUNT_EMAIL
     # echo Alert Email: $ALERT_EMAIL
@@ -196,6 +196,9 @@ if not test -f ~/.config/vim/vimrc
 end
 
 # changelog
+# 1.6
+#   - date: 2026-07-21
+#   - change name from envsource to load_env
 # 1.5
 #   - date: 2026-07-08
 #   - install php-fpm packages
