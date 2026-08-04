@@ -169,13 +169,13 @@ function __update_server --description "Updates server packages"
     multipass exec $_server_abbr -- sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a NEEDRESTART_SUSPEND=1 UCF_FORCE_CONFFOLD=1 \
         apt-get dist-upgrade -y -qq \
         -o Dpkg::Options::="--force-confdef" \
-        -o Dpkg::Options::="--force-confold" >/dev/null
+        -o Dpkg::Options::="--force-confold"
 
     printf '\t%s\n' 'Removing unnecessary packages...'
     multipass exec $_server_abbr -- sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a NEEDRESTART_SUSPEND=1 UCF_FORCE_CONFFOLD=1 \
         apt-get autoremove -y -qq \
         -o Dpkg::Options::="--force-confdef" \
-        -o Dpkg::Options::="--force-confold" >/dev/null
+        -o Dpkg::Options::="--force-confold"
 
     multipass stop $_server_abbr
     echo "Stopped the server $_server_name"
