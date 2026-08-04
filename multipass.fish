@@ -5,9 +5,12 @@
 set lts_abbr rr
 set lts_name 'Resolute Raccoon'
 
-set ver 1.6
+set ver 1.7
 
 # {{{ changelog
+# 1.7
+#   - date: 2026-08-04
+#   - fix for hanging for needrestart
 # 1.5
 #   - date: 2026-07-17
 #   - stop LTS server (if running)
@@ -163,13 +166,13 @@ function __update_server --description "Updates server packages"
     multipass exec $_server_abbr -- sudo apt-get update -qq
 
     printf '\t%s\n' 'Applying upgrades (including phased and kernel packages)...'
-    multipass exec $_server_abbr -- sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a UCF_FORCE_CONFFOLD=1 \
+    multipass exec $_server_abbr -- sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a NEEDRESTART_SUSPEND=1 UCF_FORCE_CONFFOLD=1 \
         apt-get dist-upgrade -y -qq \
         -o Dpkg::Options::="--force-confdef" \
         -o Dpkg::Options::="--force-confold" >/dev/null
 
     printf '\t%s\n' 'Removing unnecessary packages...'
-    multipass exec $_server_abbr -- sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a UCF_FORCE_CONFFOLD=1 \
+    multipass exec $_server_abbr -- sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a NEEDRESTART_SUSPEND=1 UCF_FORCE_CONFFOLD=1 \
         apt-get autoremove -y -qq \
         -o Dpkg::Options::="--force-confdef" \
         -o Dpkg::Options::="--force-confold" >/dev/null
